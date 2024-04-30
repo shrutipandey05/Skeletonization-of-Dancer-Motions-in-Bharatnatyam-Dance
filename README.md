@@ -1,6 +1,6 @@
 # Skeletonization-of-Dancer-Motions-in-Bharatnatyam-Dance
 In order to obtain the skeleton of Bharatnatyam dancers, the following solutions
-are proposed in this paper:
+are proposed:
 
 
 • The original U-Net architecture’s encoder and decoder components were modi-
