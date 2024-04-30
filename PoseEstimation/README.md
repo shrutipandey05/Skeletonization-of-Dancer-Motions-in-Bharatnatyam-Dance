@@ -38,7 +38,3 @@ Ensure you have the necessary Caffe model files in a `models/` directory as outl
 
 - Full Body Model: `models/pose/pose_deploy_linevec_faster_4_stages.prototxt` and `models/pose/pose_iter_160000.caffemodel`
 - Hand Model: `models/hand/pose_deploy.prototxt` and `models/hand/pose_iter_102000.caffemodel`
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
