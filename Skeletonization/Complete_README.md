@@ -43,6 +43,4 @@ pip install opencv-python numpy scikit-image imageai tensorflow keras
 python two_stage_pipeline.py
 ```
 
-## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
