@@ -1,0 +1,206 @@
+import os
+import skimage
+from skimage.io import imread, imsave
+from sklearn.model_selection import train_test_split
+import numpy as np
+import cv2
+from matplotlib import pyplot as plt 
+
+def read_dataset():
+    # xpath = f'{path}/binary_input/'
+    # ypath = f'{path}/binary_output/'
+    xpath = "/home/mt0/22CS60R40/UNet-Skeletonization/my_version/Dataset/binary_input_yolo"
+    ypath = "/home/mt0/22CS60R40/UNet-Skeletonization/my_version/Dataset/binary_output_yolo"
+    print("oneeee")
+    # img_names = [name.name for name in os.scandir(
+    #     xpath) if name.is_file() and name.name.find(".png") != -1]
+    img_names = [f for f in os.listdir(xpath) if f.endswith(('.png'))]
+    
+    # print(img_names)
+    # img_names1 = [name.name for name in os.scandir(
+    #     xpath) if name.is_file() and name.name.find(".png") != -1]
+    # img_names2 = [name.name for name in os.scandir(
+    #     ypath) if name.is_file() and name.name.find(".png") != -1]
+    print(img_names)
+    x_train = []
+    y_train = []
+    print("twoooo")
+    cnt=0
+    for j, file in enumerate(img_names):
+        if file.find(".png") == -1:
+            img_names.pop(j)
+            continue
+        shape_img = imread('/'.join([xpath, file]), as_gray=True)
+        shape_img=cv2.resize(shape_img, (256, 256))
+        skel_img = imread('/'.join([ypath, file]), as_gray=True)
+        skel_img=cv2.resize(skel_img, (256, 256))
+        x_train.append(shape_img)
+        y_train.append(skel_img)
+        # cnt+=1
+        # if cnt==4999:
+        #     break
+    print("3")
+    # for j, file in enumerate(img_names2):
+    #     if file.find(".png") == -1:
+    #         img_names2.pop(j)
+    #         continue
+    #     # shape_img = imread('/'.join([xpath, file]), as_gray=True)
+    #     # shape_img=cv2.resize(shape_img, (256, 256))
+    #     skel_img = imread('/'.join([ypath, file]), as_gray=True)
+    #     skel_img=cv2.resize(skel_img, (256, 256))
+    #     # x_train.append(shape_img)
+    #     y_train.append(skel_img)
+        
+    # img_names=[]
+    # img_names=img_names1+img_names2  
+    # print(x_train)
+    # print(y_train) 
+    
+    # x_train = x_train[:5001]
+    # y_train = y_train[:5001]
+    # img_names = img_names[:5001]
+    
+    print(len(x_train))
+    print(len(y_train))
+    
+    x_train, x_test, y_train, y_test, names_train, names_test = train_test_split(
+        x_train, y_train, img_names, test_size=0.30, random_state=37)
+    
+    x_train = np.array(x_train)
+    x_test = np.array(x_test)
+    y_train = np.array(y_train)
+    y_test = np.array(y_test)
+
+    print('x_train = ', x_train.shape)
+    print('y_train = ', y_train.shape)
+    
+    return x_train, x_test, y_train, y_test, names_train, names_test
+
+def read_pred_target():
+    xpath = 'y_true'
+    ypath = 'y_pred'
+    img_names = [name.name for name in os.scandir(
+        xpath) if name.is_file() and name.name.find(".png") != -1]
+    y_pred = []
+    y_true = []
+
+    for j, file in enumerate(img_names):
+        if file.find(".png") == -1:
+            img_names.pop(j)
+            continue
+        yp = imread('/'.join([xpath, file]), as_gray=True)
+        yt = imread('/'.join([ypath, file]), as_gray=True)
+        y_pred.append(yp)
+        y_true.append(yt)
+
+    y_pred = np.array(y_pred)
+    y_true = np.array(y_true)
+    return y_true, y_pred
+
+def read_tests():
+    # xpath = f'{path}/binary_input/'
+    xpath = "/home/mt0/22CS60R40/UNet-Skeletonization/my_version/Dataset/binary_input_yolo"
+
+    img_names = [name.name for name in os.scandir(
+        xpath) if name.is_file()]
+
+    x_test = []
+    for j, file in enumerate(img_names):
+        if file.find(".png") == -1:
+            continue
+        shape_img = imread('/'.join([xpath, file]), as_gray=True)
+        x_test.append(shape_img)
+    
+    x_test = np.array(x_test)
+
+    return x_test, img_names
+
+def reshape_target(target):
+    new_y_ls = []
+    for y in target:
+        zeros = y==0
+        ones = y==1
+        new_y = np.zeros((y.shape[0], y.shape[1], 2))
+        new_y[:, :, 0][zeros] = 1
+        new_y[:, :, 1][ones] = 1
+        new_y_ls.append(new_y)
+    return np.array(new_y_ls)
+
+
+def collapse_dim(y):
+    mask = np.argmax(y, axis=-1)
+    mask = np.expand_dims(mask, axis=-1)
+    mask = mask.reshape(*mask.shape[:-1])
+    return mask
+
+def write_imgs(imgs, img_names, path, collapse=False):
+    for i, y in enumerate(imgs):
+        if collapse:
+            y = collapse_dim(y)
+        timg = cv2.normalize(y, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
+        imsave(f'{path}/{img_names[i]}', timg)
+        
+
+def dist_transform(X):
+    dist_imgs = []
+    for img in X:
+        timg = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
+        dist_img = cv2.distanceTransform(timg, cv2.DIST_C, 3)
+        dist_imgs.append(dist_img)
+    
+    return np.array(dist_imgs)
+
+def distance_transform(path):
+    out_dir = 'distanced'
+
+    img_names = [name.name for name in os.scandir(
+        path) if name.is_file()]
+    
+
+    
+    for j, file in enumerate(img_names):
+        if file.find(".png") == -1:
+            continue
+        img = imread('/'.join([path, file]), as_gray=True)
+        dist_img = cv2.distanceTransform(img, cv2.DIST_C, 5)
+
+        imsave(f'{out_dir}/{file}', dist_img)
+
+
+def load_data(DIST=False, NO_TEST=True):
+    x_train, x_val, y_train, y_val, names_train, names_val = read_dataset()
+    print("aaaaaaaaaaaaaaaaa")
+    y_train, y_val = reshape_target(y_train), reshape_target(y_val)
+    print("bbbbbbbbbbbbbbbbb")
+
+    if NO_TEST:
+        x_test, names_test = None, None
+    else:
+        x_test, names_test = read_tests()
+
+    if DIST:
+        x_train = dist_transform(x_train)
+        x_val = dist_transform(x_val)
+        x_test = dist_transform(x_test)
+    
+    print(x_train.shape)
+
+    return x_train, x_val, y_train, y_val, names_train, names_val, x_test, names_test
+
+def show(rows, columns, images, titles, save=False, path=None, axis='off'):
+    plt.style.use('default')
+    fig = plt.figure(figsize=(40, 40)) 
+    k = 0
+    for i in range(rows):
+        for j in range(columns):
+            if k == len(images):
+                break
+            fig.add_subplot(rows, columns, k + 1)
+            plt.imshow(images[k], cmap='gray') 
+            plt.axis(axis) 
+            plt.title(titles[k], fontsize=40)
+            k += 1
+    if save:
+        if path is not None:
+            plt.savefig(path, facecolorcolor='white', transparent=False, bbox_inches='tight')
+    plt.close()
