@@ -21,7 +21,7 @@ This repository contains the Python code for a real-time pose detection system u
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your_username/pose-detection-system.git
+   git clone https://github.com/shrutipandey05/Skeletonization-of-Dancer-Motions-in-Bharatnatyam-Dance.git
    ```
 2. **Install dependencies**:
    ```bash
